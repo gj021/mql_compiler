@@ -28,7 +28,9 @@ INTEGER [0-9]
 
 
 {IDENTIFIER}+\.(txt) {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);   return FILE_NAME;}
-["]{IDENTIFIER}+["] {yylval.sval = (char *)malloc(sizeof(strlen(yytext)));  yylval.sval=strdup(yytext); return STRING;}
+
+["]{IDENTIFIER}+["] {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return STRING;}
+
 {IDENTIFIER}+ {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return FIELD_STRING;}
 
 {INTEGER}+ {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return INTEGER;}
