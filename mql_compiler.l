@@ -1,5 +1,7 @@
 IDENTIFIER [a-zA-Z]
 INTEGER [0-9]
+NONZEROINTEGER [1-9]
+ZERO [0]
 %{
 #include "y.tab.h"
 #include <stdio.h>
@@ -33,7 +35,7 @@ INTEGER [0-9]
 
 {IDENTIFIER}+ {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return FIELD_STRING;}
 
-{INTEGER}+ {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return INTEGER;}
+({ZERO}|({NONZEROINTEGER})({INTEGER}+)) {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return INTEGER;}
 
 [(] return LEFT;
 [)] return RIGHT;

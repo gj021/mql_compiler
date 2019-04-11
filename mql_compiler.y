@@ -3,7 +3,7 @@
     #include <string.h>
     int yylex(void);
     int yyerror(char *s);
-    #include "mql_function.h"
+    #include "mql_compiler.h"
 %}
 
 %union{
