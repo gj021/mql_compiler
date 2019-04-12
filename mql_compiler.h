@@ -196,4 +196,136 @@ void insert(char *attributes, char *file)
   {
     printf("INVALID SYNTAX\n");
   }
+  return;
+}
+
+//eg:gets *eid int and returns eid
+char *getFieldfromToken(char *str, char *tmp)
+{
+  int index = 0;
+  tmp = strdup("");
+  // printf("field from token %s %s", result, str);
+  int resultIndex = 0;
+  if(str[index] == '*')
+  {
+    index++;
+  }
+  else
+  {
+    tmp[resultIndex++] = str[index++];
+  }
+  for(int i = index; i < strlen(str); i++)
+  {
+    if(str[i] != ' ')
+    {
+      tmp[resultIndex++] = str[i];
+    }
+    else
+    {
+      printf("plz %s\n", tmp);
+      return tmp;
+    } 
+  }
+}
+
+//returns an array containing indexes of fields provided
+int *getFieldIndex(char *fields)
+{
+  int *arr = (int *)malloc(sizeof(int)*commaCount(fields));
+  FILE *fp;
+  int arrIndex = 0;
+  fp = fopen(file_name,"r");
+  char *line_buf;
+  size_t line_buf_size = 0;
+  ssize_t line_size;
+  line_size = getline(&line_buf,&line_buf_size,fp);
+
+  char *token = strtok(fields,",");
+  
+  //takes one field at a time
+  while(token != NULL)
+  {
+    printf("tken %s\n",token);
+    int index = 0;
+    char *tmpAttributes = strdup(line_buf);
+    char *attributeToken = strtok(tmpAttributes,",");
+    
+    //compares it with all the attributes of the file/table
+    while(attributeToken != NULL)
+    {
+      char *tmp;
+      tmp = getFieldfromToken(attributeToken,tmp);
+      printf("check tmp %s %s\n", tmp, token);
+      if(!strcmp(tmp,token))
+      {
+        arr[arrIndex] = index;
+        printf("h %d %d %s\n",arrIndex,index,tmp);
+        break;
+      }
+      index++;
+      attributeToken = strtok(NULL,",");
+    }
+
+    //if a field in not present in the file
+    printf("%d %d %s\n", arr[arrIndex-1],arrIndex,line_buf);
+    if(attributeToken == NULL)
+    {
+      
+      arr[0] = -1;
+    }
+    token = strtok(NULL,",");
+  }
+
+  return arr;
+  
+}
+
+//get function
+void get(char *fields, char *file, char *conditions)
+{
+  char *line_buf = NULL;
+  printf("conditions %s\n",conditions);
+  file_name = file;
+  size_t line_buf_size = 0;
+  int line_count = 0;
+  ssize_t line_size;
+  if(access(file_name,F_OK) == -1)
+  {
+    printf("FILE DOES NOT EXIST\n");
+    return;
+  }
+  char *conditiontoken = strtok(conditions,",");
+  
+  char **condition;
+
+  while(conditiontoken != NULL)
+  {
+    conditiontoken = strtok(NULL, ",");
+  }
+
+  FILE *fp = fopen(file_name, "r");
+  int *arr = (int *)malloc(sizeof(int)*100);
+  arr[0] = 0;
+  /* Get the first line of the file. */
+  line_size = getline(&line_buf, &line_buf_size, fp);
+
+  /* Loop through until we are done with the file. */
+  while (line_size >= 0)
+  {
+    if(line_count>0)
+    {
+      printf("%s",line_buf);
+    }
+    /* Get the next line */
+    line_size = getline(&line_buf, &line_buf_size, fp);
+    /* Increment our line count */
+    line_count++;
+  }
+
+  /* Free the allocated line buffer */
+  free(line_buf);
+  line_buf = NULL;
+
+  /* Close the file now that we are done with it */
+  fclose(fp);
 }

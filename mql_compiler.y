@@ -39,7 +39,7 @@ insert_stmt: INSERT RECORD LEFT attributes RIGHT INTO file_name SEMI_COLON {inse
 ;
 delete_stmt: DELETE RECORD FROM file_name conditions SEMI_COLON {printf("DELETE from %s if %s\n", $4, $5);}
 ;
-get_stmt: GET fields FROM file_name conditions SEMI_COLON {printf("get %s from %s where %s\n", $2, $4, $5);}
+get_stmt: GET fields FROM file_name conditions SEMI_COLON {printf("get %s from %s where %s\n", $2, $4, $5); get($2,$4,$5);}
 ;
 
 attributes: STRING COMMA attributes  {strcat($1,",");strcat($1,$3); $$=strdup($1);}
@@ -62,17 +62,22 @@ fields: FIELD_STRING {$$=strdup($1);}
 field: FIELD_STRING {$$=strdup($1);}
 ;
 
-conditions: %empty {$$=strdup("");}
+conditions: %empty {$$ = strdup("");}
 ;
-conditions: WHERE condition{$$=strdup($2);}
+conditions: WHERE condition{$$=strdup($2);printf("there\n"); }
 ;
-condition: FIELD_STRING COMPARATOR INTEGER AND condition { strcat($1,$2);strcat($1,$3);strcat($1,$4);strcat($1,$5);$$=strdup($1);}
+condition: FIELD_STRING COMPARATOR INTEGER AND condition {strcat($1,",");strcat($1,$2);strcat($1,",");strcat($1,$3);strcat($1,",");strcat($1,$4);strcat($1,",");strcat($1,$5);strcat($1,",");$$=strdup($1);}
 ;
-condition: FIELD_STRING COMPARATOR INTEGER OR condition {strcat($1,$2);strcat($1,$3);strcat($1,$4);strcat($1,$5);$$=strdup($1);}
+condition: FIELD_STRING COMPARATOR INTEGER OR condition {strcat($1,",");strcat($1,$2);strcat($1,",");strcat($1,$3);strcat($1,",");strcat($1,$4);strcat($1,",");strcat($1,$5);strcat($1,",");$$=strdup($1);}
 ;
-condition: FIELD_STRING COMPARATOR INTEGER {strcat($1,$2);strcat($1,$3); $$=strdup($1); }
+condition: FIELD_STRING COMPARATOR STRING OR condition {strcat($1,",");strcat($1,$2);strcat($1,",");strcat($1,$3);strcat($1,",");strcat($1,$4);strcat($1,",");strcat($1,$5);strcat($1,",");$$=strdup($1);}
 ;
-
+condition: FIELD_STRING COMPARATOR STRING AND condition {strcat($1,",");strcat($1,$2);strcat($1,",");strcat($1,$3);strcat($1,",");strcat($1,$4);strcat($1,",");strcat($1,$5);strcat($1,",");$$=strdup($1);}
+;
+condition: FIELD_STRING COMPARATOR STRING {strcat($1,","); strcat($1,$2); strcat($1,","); strcat($1,$3);$$=strdup($1);}
+;
+condition: FIELD_STRING COMPARATOR INTEGER{strcat($1,","); strcat($1,$2); strcat($1,","); strcat($1,$3);$$=strdup($1);}
+;
 file_name: FILE_NAME {$$=strdup($1);}
 ;
 
