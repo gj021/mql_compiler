@@ -1,5 +1,5 @@
-dnum int,dname string,dlocation string
-32,"fds","fsd"
-01,"CS","IBLOCK"
-32,"fds","f"
+*dnum int,dname string,dlocation string
+37,"fds","fsd"
+34,"fds","f"
 32,"sdf","fg"
+21,"df","gf"

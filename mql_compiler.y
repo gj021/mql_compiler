@@ -3,7 +3,9 @@
     #include <string.h>
     int yylex(void);
     int yyerror(char *s);
+
     #include "mql_compiler.h"
+    #include "update.h"
 %}
 
 %union{
@@ -33,11 +35,11 @@ stmt_list : stmt Nl
 stmt: get_stmt | insert_stmt | delete_stmt | update_stmt
 ;
 
-update_stmt: UPDATE RECORD IN file_name SET field TO attribute conditions SEMI_COLON {printf("update in %s set %s to %s %s\n",$4 , $6, $8, $9);}
+update_stmt: UPDATE RECORD IN file_name SET field TO attribute conditions SEMI_COLON {printf("update in %s set %s to %s %s\n",$4 , $6, $8, $9);update($4,$6,$8,$9);}
 ; 
 insert_stmt: INSERT RECORD LEFT attributes RIGHT INTO file_name SEMI_COLON {insert($4,$7);}
 ;
-delete_stmt: DELETE RECORD FROM file_name conditions SEMI_COLON {printf("DELETE from %s if %s\n", $4, $5);}
+delete_stmt: DELETE RECORD FROM file_name conditions SEMI_COLON {printf("DELETE from %s if %s\n", $4, $5);delete($4,$5);}
 ;
 get_stmt: GET fields FROM file_name conditions SEMI_COLON {printf("get %s from %s where %s\n", $2, $4, $5); get($2,$4,$5);}
 ;

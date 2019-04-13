@@ -1,7 +1,12 @@
 *eid int,ename string,eage int,eaddress string,salary int,deptno int
-80,"gj",20,"udz",0,1
+80,"gj",20,"udz",4,1
 8,"gj",20,"udz",0,1
 102,"fds",32,"fds",32,3
 108,"gj",20,"udz",0,1
 109,"df",32,"dl",23,1
-32,"ds",32,"F",32,1
+32,"ds",32,"F",32,4
+19,"as",19,"as",0,10
+18,"gj",10,"ad",0,10
+20,"DF",45,"ER",45,456
+145,"sd",34,"df",23,0
+142,"sd",34,"df",24,12
