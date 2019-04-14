@@ -3,9 +3,8 @@
     #include <string.h>
     int yylex(void);
     int yyerror(char *s);
-
     #include "mql_compiler.h"
-    #include "update.h"
+  
 %}
 
 %union{
@@ -48,12 +47,12 @@ attributes: STRING COMMA attributes  {strcat($1,",");strcat($1,$3); $$=strdup($1
 ;
 attributes: INTEGER COMMA attributes {strcat($1,","); strcat($1,$3);$$=strdup($1);}
 ; 
-attributes: STRING {$$=strdup($1);}
+attributes: STRING {$$=strdup($1); printf("HERE\n");}
 ;
 attributes: INTEGER {$$=strdup($1);}
 ;
 
-attribute: FIELD_STRING|INTEGER {$$ = strdup($1);}
+attribute: STRING|INTEGER {$$ = strdup($1);}
 ;
 
 fields: FIELD_STRING COMMA fields {strcat($1,",");strcat($1,$3);$$=strdup($1);}

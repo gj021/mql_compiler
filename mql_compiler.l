@@ -1,4 +1,4 @@
-IDENTIFIER [a-zA-Z*]
+IDENTIFIER [a-zA-Z*#]
 INTEGER [0-9]
 NONZEROINTEGER [1-9]
 ZERO [0]
@@ -35,7 +35,7 @@ ZERO [0]
 
 {IDENTIFIER}+ {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return FIELD_STRING;}
 
-({ZERO}|({NONZEROINTEGER})({INTEGER}+)) {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return INTEGER;}
+({ZERO}|({NONZEROINTEGER})({INTEGER}*)) {yylval.sval = (char *)malloc(sizeof(strlen(yytext))); yylval.sval=strdup(yytext);return INTEGER;}
 
 [(] return LEFT;
 [)] return RIGHT;

@@ -1,0 +1,6 @@
+.vscode/
+a.out
+changes.c
+lex.yy.c
+y.tab.c
+y.tab.h

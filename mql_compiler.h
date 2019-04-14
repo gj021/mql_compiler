@@ -2,11 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <ctype.h>
 
 #define MAX_RECORDS 100
 #define MAX_RECORD_SIZE 100
 char *file_name;
+
 
 
 
@@ -35,7 +36,7 @@ int getindex(char *field,char *file_name)
       {
         return 4;
       }
-      else if(strcmp("deptno",field)==0)
+      else if(strcmp("#deptno",field)==0)
       {
         return 5;
       }
@@ -109,45 +110,9 @@ int compare(int field_index,char *token,char *comparator,char *value)
   return result_value;
 }
 
-//get function
-void get(char *fields, char *file, char *conditions)
+void check(char *conditions,char *file_name,int *checkArray)
 {
-  int flag=1;
-  int fields_index[6];
-  for(int i=0;i<6;i++)
-  {
-    fields_index[i]=-1;
-  }
-  printf("%s\n",fields);
-
-  if(!strcmp(fields,"*"))
-  {
-    for(int i=0;i<6;i++)
-    {
-      fields_index[i]=1;
-    }
-    flag=0;
-  }
-  else
-  {
-    
-    char *fieldToken = strtok(fields,",");
-
-    //compares it with all the attributes of the file/table
-    while(fieldToken != NULL)
-    {
-      if(getindex(fieldToken,file)==-1)
-      {
-        printf("Wrong Fields Given");
-        flag=0;
-        break;
-      }
-      fields_index[getindex(fieldToken,file)]=1;
-      fieldToken = strtok(NULL,",");
-    }
-  }
   char *line_buf = NULL;
-  file_name = file;
   size_t line_buf_size = 0;
   int line_count = 0;
   ssize_t line_size;
@@ -189,8 +154,6 @@ void get(char *fields, char *file, char *conditions)
 
   fclose(fp);
 
-  int checkArray[lines];
-
   for(int i=0;i<lines;i++)
     {
       checkArray[i]=0;
@@ -198,9 +161,7 @@ void get(char *fields, char *file, char *conditions)
 
   int next=0;
 
-  printf("%d %d",index,count);
-
-  while(index<=count/4 && flag)
+  while(index<=count/4)
   {
     int index_count=4*index;
     int field_index=getindex(conditions_array[index_count],file_name);
@@ -257,11 +218,11 @@ void get(char *fields, char *file, char *conditions)
       /* Increment our line count */
       line_count++;
     }
-    if(!strcmp(conditions_array[index_count+3],"and"))
+    if(!strcmp(conditions_array[index_count+3],"and") || !strcmp(conditions_array[index_count+3],"AND"))
           {
               next=1;
           }
-          else if(!strcmp(conditions_array[index_count+3],"or"))
+          else if(!strcmp(conditions_array[index_count+3],"or") || !strcmp(conditions_array[index_count+3],"OR"))
           {
               next=0;
           }
@@ -277,17 +238,90 @@ void get(char *fields, char *file, char *conditions)
     fclose(fp);
     //we have conditions array here
   }
-  fp= fopen(file_name, "r");
-  for(int i=0;i<lines;i++)
+}
+
+
+//get function
+void get(char *fields, char *file, char *conditions)
+{
+  int flag=1;
+  int fields_index[6];
+  printf("%s\n", fields);
+  for(int i=0;i<6;i++)
   {
-    printf("%d\n",checkArray[i]);
+    fields_index[i]=-1;
   }
+
+  if(fields[0] == '*')
+  {
+    for(int i=0;i<6;i++)
+    {
+      fields_index[i]=1;
+    }
+    flag=0;
+  }
+  else
+  {
+    
+    char *fieldToken = strtok(fields,",");
+
+    //compares it with all the attributes of the file/table
+    while(fieldToken != NULL)
+    {
+      if(getindex(fieldToken,file)==-1)
+      {
+        printf("Wrong Fields Given");
+        flag=0;
+        break;
+      }
+      fields_index[getindex(fieldToken,file)]=1;
+      fieldToken = strtok(NULL,",");
+    }
+  }
+  FILE *fp = fopen(file_name, "r");
+  char *line_buf = NULL;
+  file_name = file;
+  size_t line_buf_size = 0;
+  int line_count = 0;
+  ssize_t line_size;
+  
+  fp= fopen(file_name, "r");
+  
+
+  int lines=0;
+
+  while(!feof(fp))
+  {
+  char ch = fgetc(fp);
+    if(ch == '\n')
+    {
+      lines++;
+    }
+  }
+
+  fclose(fp);
+
+  fp= fopen(file_name, "r");
+
+  int checkArray[lines];
+  
+  if(strlen(conditions)!=0)
+    check(conditions,file_name,checkArray);
+  else
+  {
+    for(int i=0;i<lines;i++)
+    {
+      checkArray[i]=1;
+    }  
+  }
+  
+  
 
     /* Get the first line of the file. */
     line_size = getline(&line_buf, &line_buf_size, fp);
     line_count=0;
     /* Loop through until we are done with the file. */
-    while (line_size >= 0 && flag)
+    while (line_size >= 0)
     {
       int file_index_temp=0;
       if(line_count>0 && checkArray[line_count-1]==1)
@@ -455,11 +489,73 @@ int checkPrimarykey(char *file_attributes, char *attributes)
     int arrSize = arr[0];
     if(arrSize != 0)
     {
+      printf("FOREIGN KEY CONFLICT\n");
       return 0;
     }
     return 1;
   }
   
+}
+
+//return 1 if no conflict of foreign key exists
+int checkForeignKey(char *file_attributes, char *attributes)
+{
+  int numComma = 0;
+  int flag = 0;
+  //check for hash character
+  //if hash is not there return 1
+  for(int i = 0; i < strlen(file_attributes); i++)
+  {
+    if(file_attributes[i] == '#')
+      {
+        flag = 1;
+        break;
+      }
+    if(file_attributes[i] == ',')
+      numComma++; 
+  }
+  if(flag == 0)
+    return 1;
+  //else return 1 only if the to-be inserted string(attributes) has that value in dept.txt
+  
+  //getting deptno from to be inserted record
+  char *tmpAttributes = strdup(attributes);
+  char *deptno = strtok(tmpAttributes,",");
+  int index = 0;
+  while(deptno != NULL)
+  {
+    if(numComma <= index)
+    {
+      break;
+    }
+    index++;
+    deptno = strtok(NULL,",");
+  }
+  printf("deptno %s\n", deptno);
+
+  //open dept.txt files
+  FILE *dfp;
+  dfp = fopen("DEPT.txt", "r");
+  char *line_buf;
+  size_t line_buf_size = 0;
+  ssize_t line_size;
+  line_size = getline(&line_buf,&line_buf_size,dfp);
+  //checking for dnum == deptno
+  //while loop gets dnum one by one
+  while(line_size > 0)
+  {
+    line_size = getline(&line_buf,&line_buf_size,dfp);
+    char *dept_token = strtok(line_buf,",");
+    
+    printf("dept %s\n",dept_token);
+    if(!strcmp(dept_token,deptno))
+    {
+      return 1;
+    }
+
+  }
+  printf("FOREIGN KEY NOT PRESENT\n");
+  return 0;
 }
 
 //checks if insert statement has correct semantics
@@ -475,6 +571,8 @@ int checkInsert(char *file_attributes, char *attributes)
   if(!checkDatatype(file_attributes,attributes,numComma))
     return 0;
   if(!checkPrimarykey(file_attributes,attributes))
+    return 0;
+  if(!checkForeignKey(file_attributes,attributes))
     return 0;
   return 1;
 }
@@ -503,7 +601,7 @@ void insert(char *attributes, char *file)
   }
   else
   {
-    printf("INVALID SYNTAX or Primary Key Already there\n");
+    printf("INVALID SYNTAX\n");
   }
   fclose(fp);
   return;
@@ -590,30 +688,154 @@ int *getFieldIndex(char *fields)
   
 }
 
-
-
-
 //delete function
 void delete(char *file, char *conditions)
 {
   char table[100][100];
+  char *condition_copy = strdup(conditions);
   FILE *fptr;
   file_name = file;
   int no_of_records = 0;
   fptr = fopen(file_name,"r");
   int i = 0;
 
+  FILE *fp = fopen(file_name, "r");
   char *line_buf = NULL;
   file_name = file;
   size_t line_buf_size = 0;
   int line_count = 0;
   ssize_t line_size;
+  
+  fp= fopen(file_name, "r");
+  
+
+  int lines=0;
+
+  while(!feof(fp))
+  {
+  char ch = fgetc(fp);
+    if(ch == '\n')
+    {
+      lines++;
+    }
+  }
+
+  fclose(fp);
+
+  fp= fopen(file_name, "r");
+
+  int checkArray[lines];
+
+  if(strlen(conditions)!=0)
+    check(conditions,file_name,checkArray);
+  else
+  {
+    for(int i=0;i<lines;i++)
+    {
+      checkArray[i]=1;
+    }  
+  }
+  
+
+  
+
+  
+  while(fgets(table[i],100,fptr))
+  {
+    table[i][strlen(table[i])-1] = '\0';
+    printf("%s\n",table[i]);
+    i++;
+  }
+  no_of_records = i;
+  fclose(fptr);
+  fptr = fopen(file_name,"w");
+  i = 0;
+  fprintf(fptr,table[i]);
+  fprintf(fptr,"\n");
+  i++;
+  //copy table in emp.txt
+  while(i < no_of_records)
+  {
+    if(checkArray[i-1] == 0)
+    {
+      fprintf(fptr,table[i]);
+      fprintf(fptr,"\n");
+
+    }
+    else
+    {
+      char *token = strtok(table[i],",");
+      char condi[100] = "";
+      strcat(condi,"#deptno");
+      strcat(condi,",=,");
+      strcat(condi,token);
+      printf("table %s\n",condition_copy);
+      if(!strcmp(file_name,"DEPT.txt"))
+      {
+        delete("EMP.txt",condi);
+      }
+    }
+    
+    i++;
+  }
+  fclose(fptr);
+}
+
+void update(char *file_name,char *fields,char *attributes,char *conditions)
+{
+  if(!strcmp(fields,"dnum"))
+  {
+    printf("UPDATE OF PRIMARY KEY NOT ALLOWED\n");
+    return;
+  }
+  if(!strcmp(fields,"eid"))
+  {
+    printf("UPDATE OF PRIMARY KEY NOT ALLOWED\n");
+    return;
+  }
+  printf("%s\n",conditions);
+  int field_index=getindex(fields,file_name);
+  printf("%d\n",field_index);
+  if((field_index==0 || field_index==2 || field_index==4 || field_index==5)&& !strcmp(file_name,"EMP.txt"))
+  {
+    if(attributes[0]=='"')
+    {
+      printf("Type Error\n");
+      return;
+    }
+  }
+  else if(!strcmp(file_name,"EMP.txt") && (field_index==1 || field_index==3))
+  {
+    if(attributes[0]!='"')
+    {
+      printf("Type Error\n");
+      return;
+    }
+  }
+  else if(!strcmp(file_name,"DEPT.txt") && (field_index==1 || field_index==2))
+  {
+    if(attributes[0]!='"')
+    {
+      printf("Type Error\n");
+      return;
+    }
+  }
+  char *line_buf = NULL;
+  size_t line_buf_size = 0;
+  int line_count = 0;
+  ssize_t line_size;
+  FILE *filep;
+  filep = fopen(file_name, "r");
+  line_size = getline(&line_buf,&line_buf_size,filep);
+  char *first_line = strdup(line_buf);
+  fclose(filep);
+  int counter = 0;
+  int updateIndex = 0;
   if(access(file_name,F_OK) == -1)
   {
     printf("FILE DOES NOT EXIST\n");
     return;
   }
-  //start for conditions
   char *conditiontoken = strtok(conditions,",");
     
   int count=0;
@@ -730,37 +952,99 @@ void delete(char *file, char *conditions)
 
     /* Close the file now that we are done with it */
     fclose(fp);
-    //we have conditions array here
   }
-  for(int i = 0;i < lines; i++)
+  for(int i=0;i<lines;i++)
   {
     printf("%d\n",checkArray[i]);
   }
-
-  
-  while(fgets(table[i],100,fptr))
-  {
-    table[i][strlen(table[i])-1] = '\0';
-    printf("%s\n",table[i]);
-    i++;
-  }
-  no_of_records = i;
-  fclose(fptr);
-  fptr = fopen(file_name,"w");
-  i = 0;
-  fprintf(fptr,table[i]);
-  fprintf(fptr,"\n");
-  i++;
-  while(i < no_of_records)
-  {
-    if(checkArray[i-1] == 0)
+  int ccount=0;
+    if(!strcmp(file_name,"EMP.txt"))
     {
-      fprintf(fptr,table[i]);
-      fprintf(fptr,"\n");
+      ccount=5;
     }
-    i++;
-  }
+    else
+    {
+      ccount=2;
+    }
+    
+    char temp1[100][100];
+    fp= fopen(file_name, "r");
+    
+    /* Get the first line of the file. */
+    line_size = getline(&line_buf, &line_buf_size, fp);
+    line_count=0;
+    /* Loop through until we are done with the file. */
+    while (line_size >= 0)
+    {
+      int file_index_temp=0;
+      
+      if(line_count>0)
+      {
+        // printf("d\n");
+        
+        char temp[]="";
+        char *tmpAttributes = strdup(line_buf);
+        char *attributeToken = strtok(tmpAttributes,",");
+
+        //compares it with all the attributes of the file/table
+        while(attributeToken != NULL)
+        {
+          // printf("del %s\n", attributeToken);
+          if(file_index_temp==field_index && checkArray[line_count-1]==1)
+          {
+            strcat(temp,attributes);
+            strcat(temp,",");
+            // printf("%s",attributes); 
+          }
+          else if(file_index_temp<ccount)
+          {
+            strcat(temp,attributeToken);
+            strcat(temp,",");
+            // printf("%s",attributeToken);
+          }
+          else if(file_index_temp==ccount)
+          {
+            strcat(temp,attributeToken);
+          }
+          
+          
+          file_index_temp++;
+          attributeToken = strtok(NULL,",");
+        }
+        // printf("%s\n",temp);
+        strcpy(temp1[counter++],temp);
+        updateIndex++;
+      }
+    else
+    {
+       char *tmpAttributes = strdup(line_buf);
+      strcpy(temp1[counter++],tmpAttributes);
+      updateIndex++;
+    }
+    printf("c:%d",counter);
+      
+      /* Get the next line */
+    line_size = getline(&line_buf, &line_buf_size, fp);
+      /* Increment our line count */
+    line_count++;
+    }
+    /* Free sthe allocated line buffer */
+    free(line_buf);
+    line_buf = NULL;
+
+    /* Close the file now that we are done with it */
+    fclose(fp);
+    
+    // printf("%s\n",temp1[0]);
+    FILE *fp1_temp = fopen(file_name, "w");
+    // fprintf(fp1_temp,first_line);
+    printf("counter: %s",first_line);
+    for(int i=0;i<updateIndex;i++)
+    {
+      fprintf(fp1_temp,"%s",temp1[i]);
+    }
+    
+
+    fclose(fp1_temp); 
 }
-
-
 

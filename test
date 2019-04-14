@@ -1,9 +1,17 @@
-get ename,salary from EMP.txt where ename = "gj" and eid >20;
-
 insert record (21,"df","gf") into DEPT.txt;
-insert record (18,"gj",10,"ad",0,10) into EMP.txt;
+insert record (21,"gj",10,"ad",0,24) into EMP.txt;
 
-delete record from DEPT.txt where dnum < 30 and dlocation = "gf";
+get * from EMP.txt;
+get * from EMP.txt where eid=21 and ename="gj";
+get * from DEPT.txt where dnum>1;
+get dnum from DEPT.txt where dnum>1;
+get eid,ename from EMP.txt where eid=21 or ename="asd";
+get dnum,dname from DEPT.txt where dnum>1;
 
-update record in EMP.txt set salary to 43 where eid > 32 and eid < 100;
+delete record from DEPT.txt where dnum=24;
+delete record from EMP.txt;
+
+update record in EMP.txt SET salary to 1000 where eid>10;
+update record in DEPT.txt SET dname to "asas" where dnum=23;
+update record in DEPT.txt SET dname to 23 where dnum=23;
 
